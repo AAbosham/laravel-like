@@ -7,7 +7,7 @@ Likeable is a package for Laravel.
 From the command line, run:
 
 ```
-composer require aabosham/like
+composer require aabosham/laravel-like
 ```
 
 ```
