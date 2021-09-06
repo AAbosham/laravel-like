@@ -19,7 +19,7 @@ trait Likeable
         });
     }
 
-    public function isLikedBy($user = null)
+    public function isLikedBy($type = 1, $user = null)
     {
         if ($user == null) {
             if (auth()->check()) {
@@ -32,10 +32,27 @@ trait Likeable
         return $this->likes()
             ->where('user_id', $user->id)
             ->where('isdeleted', 0)
+            ->where('type', $type)
             ->exists();
     }
 
-    public function like($type, $user = null)
+    public function getLikeType($user = null): string
+    {
+        $liked = $this->isLikedBy(1, $user);
+        $disliked = $this->isLikedBy(-1, $user);
+
+        if($liked){
+            return 'like';
+        }
+
+        if($disliked){
+            return 'dislike';
+        }
+
+        return 'none';
+    }
+
+    public function like($type = 1, $user = null)
     {
         if ($user == null) {
             if (auth()->check()) {
@@ -45,7 +62,7 @@ trait Likeable
             }
         }
 
-        if(!in_array($type,[1,-1])) {
+        if (!in_array($type, [1, -1])) {
             return false;
         }
 
@@ -82,6 +99,11 @@ trait Likeable
         }
 
         return false;
+    }
+
+    public function dislike($user = null)
+    {
+        return $this->like(-1, $user);
     }
 
     public function unlike($user = null)
@@ -128,11 +150,38 @@ trait Likeable
             ->count();
     }
 
-    public function dislikesCount()
+    public function disLikesCount()
     {
         return $this->likes()
             ->where('isdeleted', 0)
             ->where('type', -1)
             ->count();
+    }
+
+    public function likesCountDigital(): string
+    {
+        $count = $this->likesCount();
+
+        return $this->countDigital($count);
+    }
+
+    public function disLikesCountDigital(): string
+    {
+        $count = $this->disLikesCount();
+
+        return $this->countDigital($count);
+    }
+
+    public function countDigital($count): string
+    {
+        if ($count > (1000 * 1000)) {
+            $count_string = ($count / (1000 * 1000)) . 'M';
+        } else if ($count > 1000) {
+            $count_string = ($count / 1000) . 'K';
+        } else {
+            $count_string = $count;
+        }
+
+        return (string) $count_string;
     }
 }
